@@ -1,0 +1,23 @@
+{
+    "name": "aiwhj/tencent-ai",
+    "description": "tencent AI",
+    "type": "library",
+    "require": {
+        "guzzlehttp/guzzle": "^6.3",
+        "monolog/monolog": "^1.23",
+        "symfony/cache": "^4.0",
+        "pimple/pimple": "^3.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "whj",
+            "email": "whj199649@gmail.com"
+        }
+    ],
+     "autoload": {
+        "psr-4": {
+          "aiwhj\\tencentAi\\": "src/"
+        }
+    }
+}
