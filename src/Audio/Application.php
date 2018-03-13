@@ -1,7 +1,7 @@
 <?php
 namespace aiwhj\tencentAi\Audio;
 
-use aiwhj\tencentAi\App\AppContainer;
+use aiwhj\tencentAi\Kernel\AppContainer;
 
 class Application extends AppContainer
 {
