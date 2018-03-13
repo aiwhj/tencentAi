@@ -2,52 +2,64 @@
 
 namespace aiwhj\tencentAi\Kernel;
 
-class HttpClient {
+use aiwhj\tencentAi\Kernel\Helper;
+use GuzzleHttp\Client;
 
-	protected $app;
+class HttpClient
+{
 
-	protected $baseUri;
+    protected $app;
 
-	public function __construct(ServiceContainer $app) {
-		$this->app = $app;
-	}
+    protected $baseUri;
 
-	public function performRequest($url, $method = 'GET', $options = []): ResponseInterface{
-		$method = strtoupper($method);
+    public function __construct(ServiceContainer $app)
+    {
+        $this->app = $app;
+    }
+    public function httpGet(string $url, array $query = [])
+    {
+        return $this->request($url, 'GET', ['query' => $this->setParams($query)]);
+    }
 
-		$options = array_merge(self::$defaults, $options, ['handler' => $this->getHandlerStack()]);
+    public function httpPost(string $url, array $data = [])
+    {
+        return $this->request($url, 'POST', ['form_params' => $this->setParams($data)]);
+    }
+    public function request(string $url, string $method = 'GET', array $options = [])
+    {
 
-		$options = $this->fixJsonIssue($options);
+        $response = $this->getHttpClient()->request($method, $url, $options);
 
-		if (property_exists($this, 'baseUri') && !is_null($this->baseUri)) {
-			$options['base_uri'] = $this->baseUri;
-		}
+        return $response->getBody();
+    }
+    public function getHttpClient(): Client
+    {
+        if (!($this->httpClient instanceof Client)) {
+            $this->httpClient = $this->app['http_client'] ?? new Client();
+        }
 
-		$response = $this->getHttpClient()->request($method, $url, $options);
-		$response->getBody()->rewind();
-
-		return $response;
-	}
-
-	public function httpGet(string $url, array $query = []) {
-		return $this->request($url, 'GET', ['query' => $query]);
-	}
-
-	public function httpPost(string $url, array $data = []) {
-		return $this->request($url, 'POST', ['form_params' => $data]);
-	}
-
-	public function httpPostJson(string $url, array $data = [], array $query = []) {
-		return $this->request($url, 'POST', ['query' => $query, 'json' => $data]);
-	}
-
-	public function request(string $url, string $method = 'GET', array $options = [], $returnRaw = false) {
-		if (empty($this->middlewares)) {
-			$this->registerHttpMiddlewares();
-		}
-
-		$response = $this->performRequest($url, $method, $options);
-
-		return $returnRaw ? $response : $this->castResponseToType($response, $this->app->config->get('response_type'));
-	}
+        return $this->httpClient;
+    }
+    protected function getReqSign($params, $appkey)
+    {
+        ksort($params);
+        $str = '';
+        foreach ($params as $key => $value) {
+            if ($value !== '') {
+                $str .= $key . '=' . urlencode($value) . '&';
+            }
+        }
+        $str .= 'app_key=' . $appkey;
+        $sign = strtoupper(md5($str));
+        return $sign;
+    }
+    protected function setParams($params, $appkey)
+    {
+        $params['app_id']     = $appkey;
+        $params['nonce_str']  = Helper::randStr();
+        $params['time_stamp'] = time();
+        $params['sign']       = '';
+        $params['sign']       = getReqSign($params);
+        return $params;
+    }
 }
