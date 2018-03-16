@@ -2,7 +2,7 @@
 
 namespace aiwhj\tencentAi\Audio\Aaiasr;
 
-use aiwhj\tencentAi\Audio\Client;
+use aiwhj\tencentAi\Audio\Aaiasr\Client;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 

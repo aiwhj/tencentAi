@@ -12,7 +12,7 @@ class HttpClient
 
     protected $baseUri;
 
-    public function __construct(ServiceContainer $app)
+    public function __construct(AppContainer $app)
     {
         $this->app = $app;
     }

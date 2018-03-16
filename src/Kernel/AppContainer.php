@@ -11,8 +11,18 @@ class AppContainer extends Container
     protected $config    = [];
     public function __construct(array $config = [])
     {
-        $this->config = $config;
         $this->registerProviders($this->getProviders());
+        parent::__construct([]);
+        $this->config = $config;
+    }
+    public function __get($id)
+    {
+        return $this->offsetGet($id);
+    }
+
+    public function __set($id, $value)
+    {
+        $this->offsetSet($id, $value);
     }
     public function getConfig()
     {
@@ -35,7 +45,6 @@ class AppContainer extends Container
     public function registerProviders(array $providers)
     {
         foreach ($providers as $provider) {
-            echo $provider . "\n";
             parent::register(new $provider());
         }
     }
