@@ -1,6 +1,7 @@
 <?php
 namespace aiwhj\tencentAi\Kernel;
 
+use aiwhj\tencentAi\Kernel\Providers\CacheServiceProvider;
 use aiwhj\tencentAi\Kernel\Providers\ConfigServiceProvider;
 use aiwhj\tencentAi\Kernel\Providers\HttpClientServiceProvider;
 use Pimple\Container;
@@ -27,10 +28,11 @@ class AppContainer extends Container
     public function getConfig()
     {
         $base = [
-            'http' => [
+            'http'         => [
                 'timeout'  => 5.0,
-                'base_uri' => 'https://api.ai.qq.com/fcgi-bin/',
+                'base_uri' => 'https://api.ai.qq.com',
             ],
+            'responseType' => 'array',
         ];
 
         return array_replace_recursive($base, $this->config);
@@ -39,6 +41,7 @@ class AppContainer extends Container
     {
         return array_merge([
             ConfigServiceProvider::class,
+            CacheServiceProvider::class,
             HttpClientServiceProvider::class,
         ], $this->providers);
     }

@@ -12,26 +12,52 @@ class HttpClient
 
     protected $baseUri;
 
+    protected $httpClient;
+
+    protected $params;
+
     public function __construct(AppContainer $app)
     {
         $this->app = $app;
     }
+
     public function httpGet(string $url, array $query = [])
     {
-        return $this->request($url, 'GET', ['query' => $this->setParams($query)]);
+        $this->setParams($query);
+
+        return $this->request($url, 'GET', ['query' => $this->params]);
     }
 
     public function httpPost(string $url, array $data = [])
     {
-        return $this->request($url, 'POST', ['form_params' => $this->setParams($data)]);
+        $this->setParams($data);
+
+        return $this->request($url, 'POST', ['form_params' => $this->params]);
     }
+
     public function request(string $url, string $method = 'GET', array $options = [])
     {
-
         $response = $this->getHttpClient()->request($method, $url, $options);
 
-        return $response->getBody();
+        return $this->responseType($response->getBody());
     }
+
+    public function responseType($body)
+    {
+        switch ($this->app->config->responseType) {
+            case 'array':
+                return \json_decode($body, 1);
+                break;
+            case 'object':
+                return \json_decode($body, 0);
+                break;
+            case 'json':
+            default:
+                return (string) $body;
+                break;
+        }
+    }
+
     public function getHttpClient(): Client
     {
         if (!($this->httpClient instanceof Client)) {
@@ -40,7 +66,13 @@ class HttpClient
 
         return $this->httpClient;
     }
-    protected function getReqSign($params, $appkey)
+
+    public function getParams(): array
+    {
+        return $this->params;
+    }
+
+    protected function getReqSign($params)
     {
         ksort($params);
         $str = '';
@@ -49,17 +81,20 @@ class HttpClient
                 $str .= $key . '=' . urlencode($value) . '&';
             }
         }
-        $str .= 'app_key=' . $appkey;
+        $str .= 'app_key=' . $this->app->config->appkey;
         $sign = strtoupper(md5($str));
         return $sign;
     }
-    protected function setParams($params, $appkey)
+
+    protected function setParams($params)
     {
-        $params['app_id']     = $appkey;
-        $params['nonce_str']  = Helper::randStr();
-        $params['time_stamp'] = time();
-        $params['sign']       = '';
-        $params['sign']       = getReqSign($params);
-        return $params;
+        $params_def = [
+            'app_id'     => $this->app->config->appId,
+            'nonce_str'  => Helper::randStr(16),
+            'time_stamp' => time(),
+            'sign'       => '',
+        ];
+        $this->params         = array_merge($params, $params_def);
+        $this->params['sign'] = $this->getReqSign($this->params);
     }
 }
